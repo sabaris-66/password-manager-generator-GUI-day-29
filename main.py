@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 import random
 import pyperclip
+import json
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 #Password Generator Project
 def pass_gen():
@@ -46,12 +47,37 @@ def add_password():
         messagebox.askokcancel(title='Error', message="Please fill all the boxes")
     else:
         is_ok = messagebox.askokcancel(title=website, message=f"Email: {email}\nPassword: {password}\nClick OK to save")
+        new_data = {website:
+                        {'email': email,
+                         'password': password}
+                    }
         if is_ok:
-            with open('data.txt', 'a') as file:
-                file.write(f"{website} | {email} | {password}\n")
+            with open('data.json', 'r') as file:
+                try:
+                    data = json.load(file)
+                    data.update(new_data)
+                except:
+                    with open('data.json', 'w') as file2:
+                        json.dump(new_data, file2, indent=4)
+                else:
+                    with open('data.json', 'w') as file3:
+                        json.dump(data, file3, indent=4)
+
+
             website_entry.delete(0, 'end')
             password_entry.delete(0, 'end')
 
+def search_password():
+    with open('data.json', 'r') as file:
+        saved_data = json.load(file)
+        web = website_entry.get()
+        try:
+            req_password = saved_data[web]['password']
+            req_email = saved_data[web]['email']
+        except KeyError:
+            messagebox.askokcancel(title="NO DATA", message="Sorry no data found related to this website")
+        else:
+            messagebox.askokcancel(title="Password Found", message=f"Email: {req_email}\nPassword: {req_password}")
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -71,6 +97,9 @@ website_label.grid(row=1, column=0)
 website_entry = Entry(width=35)
 website_entry.grid(row=1, column=1, columnspan=2)
 website_entry.focus()
+
+search_button = Button(text="Search", command=search_password)
+search_button.grid(row=1, column=2)
 
 email_label = Label(text="Email/Username")
 email_label.grid(row=2, column=0)
